@@ -17,6 +17,11 @@ status-website:
   hideNavTitle: true
   faviconSvg: https://status.open-banking.io/favicon.svg
   themeUrl: https://status.open-banking.io/open-banking.css
+  links:
+    # Loaded after global.css + component styles, so the structural rules in
+    # open-banking.css also win cascade order (themeUrl loads first)
+    - rel: stylesheet
+      href: https://status.open-banking.io/open-banking.css
   introTitle: "**open-banking.io** service status"
   introMessage: Live availability of the open-banking.io website and API, checked every 5 minutes.
   metaTags:
@@ -25,5 +30,7 @@ status-website:
   navbar:
     - title: Status
       href: /
+    - title: Subscribe
+      href: https://github.com/open-banking-io/uptime-status/subscription
     - title: open-banking.io
       href: https://open-banking.io
