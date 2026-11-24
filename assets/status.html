@@ -78,7 +78,6 @@ h1 .g { background: var(--gradient); -webkit-background-clip: text; background-c
 [data-state='degraded'] h1 .g { background: none; color: var(--warn-text); }
 [data-state='down'] h1 .g { background: none; color: var(--down-text); }
 .lead { font-size: 1.125rem; color: var(--text-2); max-width: 520px; margin: 0 auto; }
-.updated { margin-top: 18px; font-size: 13px; color: var(--text-3); font-variant-numeric: tabular-nums; }
 
 /* Sections */
 section { padding-bottom: 56px; }
@@ -148,7 +147,6 @@ footer a:hover { color: var(--text); }
     <span class="badge"><span class="dot"></span><span id="badge">Checking status…</span></span>
     <h1 id="title">Checking <span class="g">services…</span></h1>
     <p class="lead">Live availability of the open-banking.io website and API, checked every 5 minutes.</p>
-    <p class="updated" id="updated"></p>
   </header>
 
   <section id="maint" hidden>
@@ -184,7 +182,6 @@ const $ = (id) => document.getElementById(id);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmtDate = (d) => new Date(d).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-const ago = (ms) => { const m = Math.round(ms / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : `${Math.round(m / 60)} h ago`; };
 
 function dayKeys() {
   const out = [];
@@ -264,16 +261,13 @@ function incidents(issues) {
 }
 
 async function load() {
-  const [sites, issues, last] = await Promise.all([
+  const [sites, issues] = await Promise.all([
     fetch(`${RAW}/history/summary.json`).then((r) => r.json()),
     fetch(`https://api.github.com/repos/${REPO}/issues?state=all&per_page=30`).then((r) => r.json()).catch(() => []),
-    fetch(`${RAW}/history/website.yml`).then((r) => r.text()).catch(() => ''),
   ]);
   overall(sites);
   $('services').replaceChildren(...sites.map(service));
   incidents(Array.isArray(issues) ? issues : []);
-  const t = /lastUpdated:\s*(\S+)/.exec(last);
-  if (t) $('updated').textContent = `Last checked ${ago(Date.now() - new Date(t[1]))}`;
 }
 load();
 setInterval(load, 60000);
