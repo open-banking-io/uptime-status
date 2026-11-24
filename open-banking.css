@@ -5,8 +5,9 @@
  * open-banking-io repository. Light by default; dark follows the OS color
  * scheme, like the main site's "auto" color scheme.
  *
- * Served from the site root (assets/ is copied as-is):
- *   https://status.open-banking.io/open-banking.css
+ * Served from the site root (assets/ is copied as-is) and loaded twice:
+ * once as themeUrl (before global.css) and once via status-website.links
+ * (after global.css), so structural rules also win cascade order.
  */
 
 /* Self-hosted Inter (variable, 300–900). open-banking.io serves these subsets
@@ -30,6 +31,7 @@
 
 /* Light (default) — mirrors the open-banking.io light tokens */
 :root {
+  /* Upptime theme variables */
   --body-background-color: #f6f8fc;
   --body-text-color: #0f172a;
   --card-background-color: #ffffff;
@@ -37,9 +39,9 @@
   --nav-background-color: rgba(255, 255, 255, 0.85);
   --nav-border-bottom-color: rgba(15, 23, 42, 0.10);
   --nav-current-border-bottom-color: #3b82f6;
-  --up-border-left-color: #10b981;
+  --up-border-left-color: #059669;
   --up-color-color: #0f172a;
-  --degraded-border-left-color: #f59e0b;
+  --degraded-border-left-color: #d97706;
   --degraded-color-color: #0f172a;
   --down-border-left-color: #dc2626;
   --down-color-color: #b42318;
@@ -57,16 +59,33 @@
   --submit-button-color: #ffffff;
   --code-color: #0f172a;
   --code-background-color: #eef2f9;
-  --graph-opacity: 1;
-  --graph-filter: none;
 
-  /* Extra tokens used by the polish rules below */
-  --ob-accent: #3b82f6;
+  /* open-banking.io tokens used by the polish rules */
+  --ob-focus-ring: #2563eb;
   --ob-text-secondary: #475569;
+  --ob-text-muted: #5b6b82;
   --ob-card-hover: #eef2f9;
   --ob-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.05);
-  --ob-shadow-card-hover: 0 4px 12px rgba(15, 23, 42, 0.08), 0 8px 30px rgba(15, 23, 42, 0.10);
-  --ob-gradient-text: linear-gradient(135deg, #60a5fa, #22d3ee);
+  --border-glow: rgba(59, 130, 246, 0.40);
+  --shadow-glow: 0 0 32px rgba(59, 130, 246, 0.12);
+  /* Darkened stops for WCAG contrast on light backgrounds (the wordmark keeps
+     the light stops — headlines are text, not a logo) */
+  --ob-gradient-text: linear-gradient(135deg, #2563eb, #0891b2);
+  /* Status semantics — text + soft-tint pairs per state */
+  --ob-up-text: #065f46;
+  --ob-up-soft: rgba(16, 185, 129, 0.12);
+  --ob-up-border: rgba(16, 185, 129, 0.35);
+  --ob-degraded-text: #92400e;
+  --ob-degraded-soft: rgba(245, 158, 11, 0.14);
+  --ob-degraded-border: rgba(245, 158, 11, 0.40);
+  --ob-down-text: #b42318;
+  --ob-down-soft: rgba(220, 38, 38, 0.10);
+  --ob-down-border: rgba(220, 38, 38, 0.35);
+  /* Segmented time switcher */
+  --ob-switcher-active-bg: rgba(59, 130, 246, 0.12);
+  --ob-accent-text: #1d4ed8;
+  /* Response-time graph PNG */
+  --ob-graph-opacity: 0.5;
 }
 
 /* Dark override — mirrors the open-banking.io dark tokens */
@@ -87,15 +106,34 @@
     --tag-down-background-color: #ef4444;
     --code-color: #e2e8f0;
     --code-background-color: #111827;
+
+    --ob-focus-ring: #60a5fa;
     --ob-text-secondary: #aab6c6;
+    --ob-text-muted: #8b94a3;
     --ob-card-hover: #222845;
     --ob-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.30), 0 4px 12px rgba(0, 0, 0, 0.25);
-    --ob-shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.40), 0 8px 30px rgba(0, 0, 0, 0.45);
+    --border-glow: rgba(59, 130, 246, 0.32);
+    --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.15);
+    /* Brand stops pass contrast on the dark navy surface */
+    --ob-gradient-text: linear-gradient(135deg, #60a5fa, #22d3ee);
+    --ob-up-text: #34d399;
+    --ob-up-soft: rgba(16, 185, 129, 0.15);
+    --ob-up-border: rgba(16, 185, 129, 0.35);
+    --ob-degraded-text: #fbbf24;
+    --ob-degraded-soft: rgba(245, 158, 11, 0.15);
+    --ob-degraded-border: rgba(245, 158, 11, 0.40);
+    --ob-down-text: #fca5a5;
+    --ob-down-soft: rgba(239, 68, 68, 0.12);
+    --ob-down-border: rgba(239, 68, 68, 0.35);
+    --ob-switcher-active-bg: rgba(59, 130, 246, 0.18);
+    --ob-accent-text: #60a5fa;
+    --ob-graph-opacity: 0.3;
   }
 }
 
-/* Typography — the status page's global.css loads after this file, so these
-   selectors are bumped one element above the ones they override. */
+/* ---------- Typography ---------- */
+/* The status page's global.css loads after themeUrl, so these selectors are
+   bumped one element above the ones they override. */
 html body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   line-height: 1.6;
@@ -109,51 +147,203 @@ body h4,
 body h5,
 body h6 {
   font-weight: 700;
+}
+body h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+}
+body h2 {
+  font-size: 1.25rem;
   letter-spacing: -0.02em;
 }
-body header p.lead {
-  color: var(--ob-text-secondary);
+body h3 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ob-text-muted);
+  opacity: 1; /* global.css dims h3 */
+}
+body h4 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+body .data {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+::selection {
+  background: rgba(59, 130, 246, 0.3);
 }
 
-/* Intro title with the site's gradient text treatment */
+/* ---------- Header: gradient title + soft brand washes ---------- */
+html body {
+  background-image: radial-gradient(620px circle at 8% 0, rgba(59, 130, 246, 0.14), transparent 68%),
+    radial-gradient(420px circle at 96% 80px, rgba(34, 211, 238, 0.1), transparent 70%);
+  background-repeat: no-repeat;
+}
+@media (prefers-color-scheme: dark) {
+  html body {
+    background-image: radial-gradient(620px circle at 8% 0, rgba(59, 130, 246, 0.18), transparent 68%),
+      radial-gradient(420px circle at 96% 80px, rgba(34, 211, 238, 0.12), transparent 70%);
+  }
+}
+body header {
+  margin-bottom: 2.5rem;
+}
 body header h1 {
   background: var(--ob-gradient-text);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+body header p.lead {
+  color: var(--ob-text-secondary);
+  font-size: 1.125rem;
+  max-width: 560px;
+}
 
-/* Cards: 12px radius, hairline border, soft shadow; lift on hover */
+/* ---------- Overall-status banner ("✅ All systems operational") ----------
+   Upptime renders it as the only article that is a direct child of <main>
+   without .link/.graph — restyle it into a hero status strip. */
+body main.container > article:not(.link) {
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  overflow: hidden;
+  position: relative;
+}
+body main.container > article:not(.link)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.5;
+}
+body main.container > article.up:not(.link) {
+  background: var(--ob-up-soft);
+  border-color: var(--ob-up-border);
+  color: var(--ob-up-text);
+}
+body main.container > article.degraded:not(.link) {
+  background: var(--ob-degraded-soft);
+  border-color: var(--ob-degraded-border);
+  color: var(--ob-degraded-text);
+}
+body main.container > article.down:not(.link) {
+  background: var(--ob-down-soft);
+  border-color: var(--ob-down-border);
+  color: var(--ob-down-text);
+}
+
+/* ---------- Cards ---------- */
+/* 16px radius (site --radius-lg), calmer padding, hairline border, soft shadow */
 body article {
-  border-radius: 12px;
+  border-radius: 16px;
+  padding: 1.5rem;
   box-shadow: var(--ob-shadow-card);
   transition: box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 250ms cubic-bezier(0.4, 0, 0.2, 1),
     background-color 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-body article.link:hover {
+/* Service cards get the site's glow hover; incident cards stay still */
+body section.live-status article.link:hover {
   background-color: var(--ob-card-hover);
-  box-shadow: var(--ob-shadow-card-hover);
+  border-color: var(--border-glow);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
 }
 
-/* Layout width matches the main site's container */
-body .container {
-  max-width: 1200px;
-  padding: 0 24px;
+body article.degraded-active {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: var(--border-glow);
+}
+body article.link:focus-within {
+  border-color: var(--border-glow);
+  box-shadow: var(--shadow-glow);
 }
 
-/* Nav: translucent, blurred, sticky — like the site's glass nav */
+/* ---------- Response-time graph ----------
+   The PNG is a transparent-background chart set as the card's background
+   image via the scoped --background var. Re-render it in a ::before so it
+   can be masked (dissolving left edge) without veiling the text. */
+body article.graph {
+  background-image: none !important; /* beat the scoped component style */
+  overflow: hidden;
+}
+body article.graph::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--background);
+  background-size: auto 100%;
+  background-position: right center;
+  background-repeat: no-repeat;
+  opacity: var(--ob-graph-opacity);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, 0.4) 15%, #000 40%);
+  mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, 0.4) 15%, #000 40%);
+  pointer-events: none;
+}
+body article.graph > * {
+  position: relative; /* text paints above the graph layer */
+}
+
+/* ---------- Per-service status pills ----------
+   Text redundancy for colorblind users; the class already reflects status.
+   Scoped to the live-status section so incident titles are unaffected. */
+body section.live-status h4 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+body section.live-status article h4::after {
+  content: 'Unknown';
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: var(--code-background-color);
+  color: var(--ob-text-secondary);
+}
+body section.live-status article.up h4::after {
+  content: 'Operational';
+  background: var(--ob-up-soft);
+  color: var(--ob-up-text);
+}
+body section.live-status article.degraded h4::after {
+  content: 'Degraded';
+  background: var(--ob-degraded-soft);
+  color: var(--ob-degraded-text);
+}
+body section.live-status article.down h4::after {
+  content: 'Down';
+  background: var(--ob-down-soft);
+  color: var(--ob-down-text);
+}
+
+/* ---------- Nav: glass bar ---------- */
 body nav {
   position: sticky;
   top: 0;
   z-index: 100;
-  -webkit-backdrop-filter: blur(12px) saturate(1.4);
-  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  backdrop-filter: blur(20px) saturate(1.5);
 }
 body nav,
 body nav ul {
   color: var(--ob-text-secondary);
 }
 body nav ul li a {
+  font-size: 14px;
   font-weight: 500;
   transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -161,20 +351,85 @@ body nav ul li a:hover {
   color: var(--body-text-color);
 }
 body nav [aria-current='page'] {
-  color: var(--ob-accent);
+  color: var(--ob-accent-text);
 }
-/* The logo is a horizontal wordmark: smaller than the default square icon,
-   and no rounded corners. !important to beat the scoped component style. */
+/* The logo is a horizontal wordmark: brand height 28px, no rounded corners.
+   !important to beat the scoped component style. */
 body .logo img {
-  height: 2rem !important;
+  height: 28px !important;
   border-radius: 0 !important;
 }
 
-/* Status tags and buttons: pill-shaped */
+/* ---------- Time-range switcher: segmented control ---------- */
+body form.f.r {
+  gap: 0.25rem;
+  justify-content: center;
+  background: var(--code-background-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 9999px;
+  padding: 0.25rem;
+  margin-bottom: 1rem;
+}
+body form.f.r label {
+  margin-left: 0;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+body form.f.r label:hover {
+  color: var(--ob-accent-text);
+}
+body form.f.r input:checked + label {
+  background: var(--ob-switcher-active-bg);
+  color: var(--ob-accent-text);
+  font-weight: 600;
+}
+/* Keep the radios keyboard-operable: visually hidden, still focusable.
+   The scoped component style display:none's them (WCAG 2.1.1 failure). */
+body form.f.r input {
+  display: block !important;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  margin: 0;
+  padding: 0;
+}
+body form.f.r input:focus-visible + label {
+  outline: 2px solid var(--ob-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---------- Tags & buttons: pills ---------- */
 body .tag {
   border-radius: 9999px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 0.3rem 0.75rem;
+  letter-spacing: 0.02em;
+  padding: 3px 10px;
+}
+body .tag.up {
+  background: var(--ob-up-soft) !important;
+  color: var(--ob-up-text) !important;
+}
+body .tag.degraded {
+  background: var(--ob-degraded-soft) !important;
+  color: var(--ob-degraded-text) !important;
+}
+body .tag.down,
+body .tag.open {
+  background: var(--ob-down-soft) !important;
+  color: var(--ob-down-text) !important;
+}
+/* Closed/resolved incidents get a calm outline instead of a second solid color */
+body .tag.closed {
+  background: transparent !important; /* global.css sets background !important */
+  border: 1px solid var(--card-border-color);
+  color: var(--ob-text-secondary);
 }
 body .submit-button,
 body a.error-button {
@@ -186,17 +441,56 @@ body a.error-button:hover {
   filter: brightness(1.08);
 }
 
+/* ---------- Focus & motion ---------- */
+body :focus-visible {
+  outline: 2px solid var(--ob-focus-ring);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  body article,
+  body .data,
+  body .tag,
+  body nav ul li a,
+  body form.f.r label {
+    transition: none !important;
+  }
+  body section.live-status article.link:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 600px) {
+  body nav .container {
+    flex-wrap: wrap;
+    padding: 0;
+  }
+  body nav ul li a {
+    padding: 12px;
+  }
+  body article {
+    padding: 1.25rem;
+  }
+  body article.graph::before {
+    left: 50%;
+  }
+  body form.f.r {
+    flex-wrap: wrap;
+    border-radius: 16px;
+  }
+  body form.f.r label {
+    padding: 4px 8px;
+  }
+}
+
+/* ---------- Layout ---------- */
+/* Container width matches the main site */
+body .container {
+  max-width: 880px;
+  padding: 0 24px;
+}
+
 /* Footer: hidden — the default "This page is open source, powered by
    Upptime" attribution is not wanted on this status page */
 body footer {
   display: none;
-}
-
-/* Time-range switcher labels */
-body .f .r label {
-  cursor: pointer;
-  transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-body .f .r label:hover {
-  color: var(--ob-accent);
 }
