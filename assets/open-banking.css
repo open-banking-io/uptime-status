@@ -186,6 +186,12 @@ body a.error-button:hover {
   filter: brightness(1.08);
 }
 
+/* Footer: hidden — the default "This page is open source, powered by
+   Upptime" attribution is not wanted on this status page */
+body footer {
+  display: none;
+}
+
 /* Time-range switcher labels */
 body .f .r label {
   cursor: pointer;
