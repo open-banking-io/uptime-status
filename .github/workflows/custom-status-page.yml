@@ -1,0 +1,27 @@
+name: Custom Status Page
+on:
+  workflow_run:
+    workflows: ["Static Site CI"]
+    types: [completed]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: master
+      - run: |
+          mkdir out
+          cp assets/status.html out/index.html
+          cp assets/favicon.svg assets/logo-horizontal.svg assets/inter-latin.woff2 assets/inter-latin-ext.woff2 out/
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ github.token }}
+          publish_dir: out
+          keep_files: true
+          user_name: "Upptime Bot"
+          user_email: "73812536+upptime-bot@users.noreply.github.com"
