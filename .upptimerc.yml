@@ -12,8 +12,16 @@ sites:
 status-website:
   cname: status.open-banking.io
   name: open-banking.io status
+  logoUrl: https://status.open-banking.io/logo-horizontal.svg
+  logoHref: https://open-banking.io
+  hideNavTitle: true
+  faviconSvg: https://status.open-banking.io/favicon.svg
+  themeUrl: https://status.open-banking.io/open-banking.css
   introTitle: "**open-banking.io** service status"
   introMessage: Live availability of the open-banking.io website and API, checked every 5 minutes.
+  metaTags:
+    - name: "color-scheme"
+      content: "dark light"
   navbar:
     - title: Status
       href: /
